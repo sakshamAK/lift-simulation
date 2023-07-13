@@ -1,0 +1,87 @@
+#liftSimulator,
+.single-floor {
+    display: flex;
+    flex-direction: column;
+    /* gap: 2rem; */
+    align-items: center;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.single-floor {
+    align-items: flex-start;
+    gap: 2rem;
+    padding: 2rem;
+    border-bottom: 1px solid black;
+    height: 6rem;
+}
+
+.single-floor button {
+    padding: 0.5rem 1rem;
+    border: 1px solid black;
+    cursor: pointer;
+}
+
+#container {
+    position: relative;
+    min-height: 10rem;
+}
+
+
+#lifts {
+    display: flex;
+    position: absolute;
+    bottom: 1px;
+    right: 0;
+    width: calc(100% - calc(6rem + 68px));
+    justify-content: space-around;
+    height: 100%;
+    align-items: flex-end;
+}
+
+.single-lift {
+    height: 10rem;
+    width: 6rem;
+    background-color: #5b6467;
+    background-image: linear-gradient(315deg, #5b6467 0%, #8b939a 74%);
+    transition: top 1s linear;
+    position: relative;
+    top: 0;
+    display: flex;
+    overflow: hidden;
+}
+
+.getToTop {
+    transform: translateY(-55rem);
+    transition: all 1s linear;
+}
+
+.openDoors {
+    position: relative;
+    display: flex;
+    justify-content: center;
+}
+
+.openDoors::after {
+    content: "";
+    position: absolute;
+    height: 100%;
+    width: 0;
+    background-color: #d7d7d7;
+    background-image: linear-gradient(147deg, #d7d7d7 0%, #353535 74%);
+    background-size: auto 100%;
+    animation: openCloseDoors 4s ease-in-out;
+}
+
+@keyframes openCloseDoors {
+    0% {
+        width: 0;
+    }
+
+    50% {
+        width: 100%;
+    }
+
+    100% {
+        width: 0;
+    }
+}
