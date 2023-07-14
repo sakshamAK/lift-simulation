@@ -67,12 +67,13 @@ function generateFloors(getFloors) {
         up.addEventListener("click", (e) => {
             const liftCalledAt = parseInt(e.target.getAttribute("data-floor"))
             const callAtFloor = callLift(liftCalledAt);
-            moveLift(callAtFloor, liftCalledAt);
+            moveLift(callAtFloor, liftCalledAt, up);
+           
         })
         down.addEventListener("click", e => {
             const liftCalledAt = parseInt(e.target.getAttribute("data-floor"))
             const callAtFloor = callLift(liftCalledAt);
-            moveLift(callAtFloor, liftCalledAt);
+            moveLift(callAtFloor, liftCalledAt, down);
         })
         DOMfloors.appendChild(singleFloor)
 
@@ -122,33 +123,42 @@ function callLift(liftNumber) {
         if (!lift.isMoving) {
             const diff = Math.abs(liftNumber - lift.currentFloor);
             newQueue.enqueue(i, diff);
+            console.log(lift.isMoving);
+            return newQueue.dequeue();
         }
         else if (lift.currentFloor === liftNumber) return i;
     }
-    return newQueue.dequeue();
 }
 
-function moveLift(liftNumber, floorNumber) {
+// [1, 3, 4]
+
+function moveLift(liftNumber, floorNumber, buttonCall) {
     const lift = liftData[liftNumber];
+    lift.isMoving = true;
     const liftElement = document.getElementById(liftNumber);
     const newPosition = floorNumber * 160 + floorNumber;
     const timer = floorNumber === 0 ? lift.currentFloor * 2000 : 2000 * floorNumber;
-
-    lift.isMoving = true;
+    
     liftElement.style.transform = `translateY(-${newPosition}px)`;
     liftElement.style.transition = `transform ${timer}ms linear`;
     lift.position = newPosition;
     lift.currentFloor = floorNumber;
+    buttonCall.setAttribute("disabled", "true")
+    
+    const openDoors = new Promise((resolve, _) => {
+        setTimeout(() => {
+            liftElement.classList.add("openDoors")
+            resolve();
+        }, timer)
+    })
 
-    setTimeout(() => {
-        liftElement.classList.add("openDoors");
-    }, timer)
-    setTimeout(() => {
+    openDoors.then(() => setTimeout(() => {
         lift.isMoving = false;
         liftElement.classList.remove("openDoors");
+        buttonCall.removeAttribute("disabled");
         // if(!newQueue.isEmpty()) {
         //     newQueue.dequeue();
         // }
 
-    }, timer + 4000)
+    }, 4000))
 }
