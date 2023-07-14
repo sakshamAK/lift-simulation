@@ -20,28 +20,29 @@ class PriorityStatus {
     dequeue() {
         if (this.isEmpty())
             return null;
-
-        return this.queue.shift().item;
+            
+            return this.queue.shift().item;
+        }
+        
+        isEmpty() {
+            return this.queue.length === 0
     }
-
-    isEmpty() {
-        return this.queue.length === 0
-    }
-
+    
     sort() {
         this.queue.sort((a, b) => a.priority - b.priority);
     }
 }
 
+const newQueue = new PriorityStatus();
 
-const generateFloors = (getFloors) => {
+function generateFloors(getFloors) {
     const floors = Array.from(Array(getFloors).keys());
-
+    
     DOMfloors.innerHTML = "";
     for (idx = floors.length - 1; idx >= 0; idx--) {
         const singleFloor = document.createElement('div');
         singleFloor.classList.add("single-floor");
-
+        
         const up = document.createElement("button");
         up.setAttribute("data-id", `${idx}-up`);
         up.setAttribute("data-floor", idx);
@@ -79,7 +80,7 @@ const generateFloors = (getFloors) => {
 }
 
 
-const generateLifts = (getLifts) => {
+function generateLifts(getLifts) {
     const lifts = Array.from(Array(getLifts).keys());
 
     DOMlifts.innerHTML = "";
@@ -97,55 +98,7 @@ const generateLifts = (getLifts) => {
     })
 }
 
-// const moveLifts = buttonCall => {
-//     const singleLifts = document.getElementsByClassName("single-lift");
-//     const liftLeftDoor = document.getElementsByClassName("left-door");
-//     const liftRightDoor = document.getElementsByClassName("right-door");
-//     const floors = Object.values(document.getElementsByClassName("single-floor"))
-//     const { top } = singleLifts[i].getBoundingClientRect();
-//     const liftDistaceFromTop = DOMfloors.offsetHeight - singleLifts[i].offsetHeight;
-//     const buttonDistanceFromTop = buttonCall.offsetTop - 32;
-//     let floorLevel = buttonDistanceFromTop - liftDistaceFromTop;
-//     let levelOnTop;
-
-//     if (buttonCall.getAttribute("data-id")) {
-//         levelOnTop = buttonCall.getBoundingClientRect().top - 32;
-
-//         if (buttonCall.getAttribute("data-id").includes("down") && buttonCall.getAttribute("data-id") !== `${floors.length - 1}-down`) {
-//             floorLevel = floorLevel - 64;
-//             levelOnTop = buttonCall.getBoundingClientRect().top - 32 - 65;
-//         }
-
-//         if (buttonCall.getAttribute("data-id") === `${floors.length - 1}-down` || buttonCall.getAttribute("data-id") === `0-up`) {
-//             levelOnTop = levelOnTop - 1;
-//         }
-//     }
-
-//     if (levelOnTop !== top) {
-//         singleLifts[i].style.position = "relative";
-//         singleLifts[i].style.top = `${floorLevel}px`;
-//         liftLeftDoor[i].style.animation = "";
-//         liftRightDoor[i].style.animation = "";
-//         setTimeout(() => {
-//             liftLeftDoor[i].style.animation = "openCloseDoorsleft 2s forwards"
-//             liftRightDoor[i].style.animation = "openCloseDoorsright 2s forwards"
-//             if (i !== singleLifts.length - 1) {
-//                 i++;
-//             } else {
-//                 i = 0;
-//             }
-//         }, 2000)
-//     }
-//     else {
-//         i = 0;
-//     }
-// }
-
-// document.addEventListener("click", (e) => {
-//     if (e.target.hasAttribute("data-id")) moveLifts(e.target);
-// })
-
-const generateDOM = e => {
+function generateDOM(e) {
     if (e.key === "Enter") {
         lifts = Number(totalLifts.value)
         floors = Number(totalFloors.value)
@@ -161,15 +114,14 @@ const generateDOM = e => {
 totalFloors.addEventListener("keydown", (e) => generateDOM(e))
 totalLifts.addEventListener("keydown", (e) => generateDOM(e))
 
+
 function callLift(liftNumber) {
-    const newQueue = new PriorityStatus();
 
     for (let i = 0; i < liftData.length; i++) {
         const lift = liftData[i];
         if (!lift.isMoving) {
             const diff = Math.abs(liftNumber - lift.currentFloor);
             newQueue.enqueue(i, diff);
-            // console.log(newQueue.queue);
         }
         else if (lift.currentFloor === liftNumber) return i;
     }
@@ -179,9 +131,8 @@ function callLift(liftNumber) {
 function moveLift(liftNumber, floorNumber) {
     const lift = liftData[liftNumber];
     const liftElement = document.getElementById(liftNumber);
-    console.log(liftNumber, liftElement);
     const newPosition = floorNumber * 160 + floorNumber;
-    const timer = 2000;
+    const timer = floorNumber === 0 ? lift.currentFloor * 2000 : 2000 * floorNumber;
 
     lift.isMoving = true;
     liftElement.style.transform = `translateY(-${newPosition}px)`;
@@ -195,9 +146,9 @@ function moveLift(liftNumber, floorNumber) {
     setTimeout(() => {
         lift.isMoving = false;
         liftElement.classList.remove("openDoors");
+        // if(!newQueue.isEmpty()) {
+        //     newQueue.dequeue();
+        // }
+
     }, timer + 4000)
-
-    // console.log(lift.isMoving, timer+4000);
-
-
 }
