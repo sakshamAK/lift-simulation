@@ -15,6 +15,10 @@
     height: 6rem;
 }
 
+p {
+    margin: 0;
+}
+
 .single-floor button {
     padding: 0.5rem 1rem;
     border: 1px solid black;
