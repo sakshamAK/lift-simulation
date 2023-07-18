@@ -3,46 +3,19 @@ const totalFloors = document.getElementById("totalFloors");
 const liftSimulator = document.getElementById("liftSimulator");
 const DOMlifts = document.getElementById("lifts");
 const DOMfloors = document.getElementById("floors");
-let count = 0, i = 0;
-let groundLiftHeight = 0;
 let liftData = [];
-
-class PriorityStatus {
-    constructor() {
-        this.queue = [];
-    }
-
-    enqueue(item, priority) {
-        this.queue.push({ item, priority })
-        this.sort();
-    }
-
-    dequeue() {
-        if (this.isEmpty())
-            return null;
-            
-            return this.queue.shift().item;
-        }
-        
-        isEmpty() {
-            return this.queue.length === 0
-    }
-    
-    sort() {
-        this.queue.sort((a, b) => a.priority - b.priority);
-    }
-}
-
-const newQueue = new PriorityStatus();
+let queueStack = [];
+let newQueue = [...liftData];
+let enableButtons = [];
 
 function generateFloors(getFloors) {
     const floors = Array.from(Array(getFloors).keys());
-    
+
     DOMfloors.innerHTML = "";
     for (idx = floors.length - 1; idx >= 0; idx--) {
         const singleFloor = document.createElement('div');
         singleFloor.classList.add("single-floor");
-        
+
         const up = document.createElement("button");
         up.setAttribute("data-id", `${idx}-up`);
         up.setAttribute("data-floor", idx);
@@ -66,14 +39,17 @@ function generateFloors(getFloors) {
 
         up.addEventListener("click", (e) => {
             const liftCalledAt = parseInt(e.target.getAttribute("data-floor"))
-            const callAtFloor = callLift(liftCalledAt);
-            moveLift(callAtFloor, liftCalledAt, up);
-           
+            const getButtons = document.querySelectorAll(`[data-floor="${liftCalledAt}"]`)
+            Object.values(getButtons).map(item => item.setAttribute("disabled", "true"));
+            moveLift(liftCalledAt, getButtons);
+
         })
         down.addEventListener("click", e => {
             const liftCalledAt = parseInt(e.target.getAttribute("data-floor"))
-            const callAtFloor = callLift(liftCalledAt);
-            moveLift(callAtFloor, liftCalledAt, down);
+            const getButtons = document.querySelectorAll(`[data-floor="${liftCalledAt}"]`)
+            console.log(getButtons);
+            Object.values(getButtons).map(item => item.setAttribute("disabled", "true"));
+            moveLift(liftCalledAt, getButtons);
         })
         DOMfloors.appendChild(singleFloor)
 
@@ -116,49 +92,71 @@ totalFloors.addEventListener("keydown", (e) => generateDOM(e))
 totalLifts.addEventListener("keydown", (e) => generateDOM(e))
 
 
-function callLift(liftNumber) {
 
-    for (let i = 0; i < liftData.length; i++) {
-        const lift = liftData[i];
-        if (!lift.isMoving) {
-            const diff = Math.abs(liftNumber - lift.currentFloor);
-            newQueue.enqueue(i, diff);
-            console.log(lift.isMoving);
-            return newQueue.dequeue();
-        }
-        else if (lift.currentFloor === liftNumber) return i;
+function moveLift(floorNumber, getButtons) {
+    let availableLift = liftData.filter(item => !item.isMoving);
+    const getNearestLift = availableLift.reduce((acc, curr) => {
+        const diff = Math.abs(floorNumber - curr.currentFloor);
+        const accDiff = Math.abs(floorNumber - acc.currentFloor);
+        let myLift;
+        (diff < accDiff) ? myLift = curr : myLift = acc;
+        return myLift;
+    }, availableLift[0]);
+
+    if (availableLift.length === 0) {
+        if (newQueue.length === 0) newQueue = [...liftData];
+        const noLiftFree = newQueue.reduce((acc, curr) => {
+            const diff = Math.abs(floorNumber - curr.currentFloor);
+            const accDiff = Math.abs(floorNumber - acc.currentFloor);
+            let myLift;
+            (diff < accDiff) ? myLift = curr : myLift = acc;
+            return myLift;
+        })
+
+        newQueue = newQueue.filter(item => item.id !== noLiftFree.id);
+
+        queueStack.push({ floor: floorNumber, lift: noLiftFree.id, diff: Math.abs(floorNumber - noLiftFree.currentFloor) });
+        queueStack.sort((a, b) => a.diff - b.diff);
+        enableButtons.push(getButtons);
+    } else {
+        queueStack.push({ floor: floorNumber, lift: getNearestLift.id, diff: Math.abs(floorNumber - getNearestLift.currentFloor) });
+        queueStack.sort((a, b) => a.diff - b.diff);
+        callLift(getNearestLift, getButtons);
     }
+
 }
 
-// [1, 3, 4]
+function callLift(nearestLift, getButtons) {
+    const lift = liftData.find(item => item.id === nearestLift.id);
+    const liftElement = document.getElementById(lift.id);
 
-function moveLift(liftNumber, floorNumber, buttonCall) {
-    const lift = liftData[liftNumber];
-    lift.isMoving = true;
-    const liftElement = document.getElementById(liftNumber);
+    const floorNumber = queueStack.filter(item => item.lift === lift.id).shift().floor;
     const newPosition = floorNumber * 160 + floorNumber;
-    const timer = floorNumber === 0 ? lift.currentFloor * 2000 : 2000 * floorNumber;
-    
-    liftElement.style.transform = `translateY(-${newPosition}px)`;
-    liftElement.style.transition = `transform ${timer}ms linear`;
+    const timer = Math.abs(floorNumber - lift.currentFloor) * 2000;
+    lift.isMoving = true;
     lift.position = newPosition;
     lift.currentFloor = floorNumber;
-    buttonCall.setAttribute("disabled", "true")
-    
-    const openDoors = new Promise((resolve, _) => {
+
+    liftElement.style.transform = `translateY(-${newPosition}px)`;
+    liftElement.style.transition = `transform ${timer}ms linear`;
+    queueStack.shift();
+    const newPromise = new Promise((res, _) => {
         setTimeout(() => {
-            liftElement.classList.add("openDoors")
-            resolve();
+            res(liftElement.classList.add("openDoors"));
         }, timer)
     })
-
-    openDoors.then(() => setTimeout(() => {
-        lift.isMoving = false;
-        liftElement.classList.remove("openDoors");
-        buttonCall.removeAttribute("disabled");
-        // if(!newQueue.isEmpty()) {
-        //     newQueue.dequeue();
-        // }
-
-    }, 4000))
+    newPromise.then(() => {
+        setTimeout(() => {
+            lift.isMoving = false;
+            liftElement.classList.remove("openDoors");
+            if(getButtons) Object.values(getButtons).map(item => item.removeAttribute("disabled"));
+            if (queueStack.length !== 0) {
+                callLift(nearestLift);
+                if (enableButtons.length !== 0) {
+                    let buttons = enableButtons.shift();
+                    Object.values(buttons).map(item => item.removeAttribute("disabled"));
+                }
+            }
+        }, 4000)
+    })
 }
