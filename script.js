@@ -19,12 +19,14 @@ function generateFloors(getFloors) {
         const up = document.createElement("button");
         up.setAttribute("data-id", `${idx}-up`);
         up.setAttribute("data-floor", idx);
-        up.textContent = "up";
+        up.setAttribute("class", "material-symbols-outlined")
+        up.textContent = "arrow_upward";
 
         const down = document.createElement("button");
         down.setAttribute("data-id", `${idx}-down`);
         down.setAttribute("data-floor", idx);
-        down.textContent = "down";
+        down.setAttribute("class", "material-symbols-outlined")
+        down.textContent = "arrow_downward";
 
         if (idx === 0) {
             singleFloor.appendChild(up);
@@ -77,6 +79,10 @@ function generateLifts(getLifts) {
 
 function generateDOM(e) {
     if (e.key === "Enter") {
+        liftData = [];
+        queueStack = [];
+        newQueue = [...liftData];
+        enableButtons = [];
         lifts = Number(totalLifts.value)
         floors = Number(totalFloors.value)
         if (lifts > 10 || floors > 10 || lifts <= 0 || floors <= 0) return alert("Entered value must be between 0 and 10");
@@ -149,7 +155,7 @@ function callLift(nearestLift, getButtons) {
         setTimeout(() => {
             lift.isMoving = false;
             liftElement.classList.remove("openDoors");
-            if(getButtons) Object.values(getButtons).map(item => item.removeAttribute("disabled"));
+            if (getButtons) Object.values(getButtons).map(item => item.removeAttribute("disabled"));
             if (queueStack.length !== 0) {
                 callLift(nearestLift);
                 if (enableButtons.length !== 0) {
