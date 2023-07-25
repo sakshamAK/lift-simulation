@@ -98,8 +98,15 @@ function moveLift(floorNumber, getButtons) {
     }, availableLift[0]);
 
     if (liftData.find(item => item.currentFloor === floorNumber)) {
-        Object.values(getButtons).map(item => item.removeAttribute("disabled"))
-        return
+        const liftElement = liftData.find(item => item.currentFloor === floorNumber);
+        const newPromise = new Promise((res, _) => {
+            res(liftElement.classList.add("openDoors"));
+        })
+        newPromise.then(() => liftElement.classList.remove("openDoors"))
+            .then(() => {
+                Object.values(getButtons).map(item => item.removeAttribute("disabled"))
+                return;
+            })
     };
 
     if (availableLift.length === 0) {
